@@ -319,6 +319,15 @@
             }
         }
 
+        function testWithDummyUrl() {
+            // Тестовая subscription URL для проверки
+            subscriptionUrl = "https://myfriendlyvpn.duckdns.org:8000/sub/user_371091233_1751797493";
+            
+            document.getElementById('status').innerHTML = '🧪 Тестируем с фиктивной ссылкой подписки';
+            document.getElementById('status').className = 'status info';
+            document.getElementById('app-selection').style.display = 'block';
+        }
+
         // Обработка возврата в приложение
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden && selectedApp) {
