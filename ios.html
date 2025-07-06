@@ -163,28 +163,27 @@
             }
 
             try {
-                // Правильная схема для Streisand с import
-                const streisandUrl = `streisand://import/${encodeURIComponent(subscriptionUrl)}`;
-
                 console.log('Original URL:', subscriptionUrl);
-                console.log('Streisand URL:', streisandUrl);
+                console.log('Original URL length:', subscriptionUrl.length);
 
-                window.location.href = streisandUrl;
-                
-                document.getElementById('status').innerHTML = '✅ Переход в Streisand...';
+                // Пробуем БЕЗ кодирования
+                const streisandUrl1 = `streisand://import/${subscriptionUrl}`;
+                console.log('Streisand URL (no encoding):', streisandUrl1);
+
+                // Пробуем С кодированием 
+                const streisandUrl2 = `streisand://import/${encodeURIComponent(subscriptionUrl)}`;
+                console.log('Streisand URL (with encoding):', streisandUrl2);
+
+                // Используем версию БЕЗ кодирования
+                window.location.href = streisandUrl1;
+
+                document.getElementById('status').innerHTML = '✅ Переход в Streisand (без кодирования)...';
                 document.getElementById('status').className = 'status success';
 
-                setTimeout(() => {
-                    document.getElementById('status').innerHTML = '💡 Если Streisand не открылся, используйте ручной способ ниже';
-                    document.getElementById('status').className = 'status info';
-                    document.getElementById('subscription-url').style.display = 'block';
-                }, 3000);
-
-             } catch (error) {
+            } catch (error) {
                 console.error('AutoConnect error:', error);
                 document.getElementById('status').innerHTML = '❌ Ошибка автоподключения';
                 document.getElementById('status').className = 'status error';
-                document.getElementById('subscription-url').style.display = 'block';
             }
         }
 
