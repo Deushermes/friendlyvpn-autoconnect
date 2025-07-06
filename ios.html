@@ -30,6 +30,7 @@
         h1 {
             color: #333;
             margin-bottom: 15px;
+            font-size: 24px;
         }
         .step {
             background: #f8f9fa;
@@ -37,6 +38,19 @@
             padding: 15px;
             margin: 15px 0;
             text-align: left;
+        }
+        .step-number {
+            background: #007AFF;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 14px;
         }
         .btn {
             background: #007AFF;
@@ -56,28 +70,33 @@
             background: #0056CC;
             transform: translateY(-2px);
         }
-        .btn-secondary {
+        .btn-success {
             background: #34C759;
         }
-        .btn-secondary:hover {
+        .btn-success:hover {
             background: #28A745;
         }
-        .btn-danger {
-            background: #FF3B30;
+        .btn-secondary {
+            background: #8E8E93;
         }
-        .btn-danger:hover {
-            background: #D70015;
+        .btn-secondary:hover {
+            background: #6D6D70;
         }
-        .subscription-url {
+        .config-box {
             background: #f0f0f0;
-            border: 1px dashed #ccc;
+            border: 2px dashed #007AFF;
             border-radius: 8px;
             padding: 15px;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             word-break: break-all;
             margin: 15px 0;
+            max-height: 150px;
+            overflow-y: auto;
             display: none;
+        }
+        .config-box.show {
+            display: block;
         }
         .status {
             margin: 20px 0;
@@ -93,28 +112,37 @@
             background: #d1ecf1;
             color: #0c5460;
         }
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
         }
-        .debug-info {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 15px 0;
-            font-family: monospace;
-            font-size: 11px;
-            text-align: left;
+        .qr-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #f0f0f0;
             display: none;
         }
-        .toggle-debug {
-            font-size: 12px;
-            color: #6c757d;
-            text-decoration: underline;
-            cursor: pointer;
+        .qr-container.show {
+            display: block;
+        }
+        .instruction {
+            background: #e7f3ff;
+            border-left: 4px solid #007AFF;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: #fff8e1;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -122,261 +150,238 @@
         <h1>Подключение VPN для iOS</h1>
         
         <div id="status" class="status info">
-            ⏳ Загрузка данных подключения...
+            ⏳ Загрузка конфигурации VPN...
         </div>
 
+        <!-- Шаг 1: Установка приложения -->
         <div class="step">
-            <strong>1️⃣ Установите Streisand</strong><br>
-            <small>Скачайте из App Store, если еще не установлено</small>
+            <span class="step-number">1</span>
+            <strong>Установите Streisand</strong><br>
+            <small>Скачайте бесплатное приложение из App Store</small>
         </div>
 
         <button class="btn" onclick="downloadApp()">
-            📲 Скачать Streisand
+            📲 Открыть App Store
         </button>
 
+        <!-- Шаг 2: QR-код (рекомендуемый способ) -->
         <div class="step">
-            <strong>2️⃣ Автоподключение</strong><br>
-            <small>Попробуем открыть Streisand автоматически</small>
+            <span class="step-number">2</span>
+            <strong>Сканируйте QR-код</strong><br>
+            <small>Самый надежный способ подключения</small>
         </div>
 
-        <button class="btn btn-secondary" onclick="autoConnect()" id="autoConnectBtn" disabled>
-            🚀 Подключить автоматически
+        <button class="btn btn-success" onclick="showQR()" id="qrBtn" disabled>
+            📱 Показать QR-код
         </button>
 
-        <div class="step">
-            <strong>3️⃣ Ручное подключение</strong><br>
-            <small>Скопируйте ссылку и импортируйте в Streisand</small>
+        <div id="qr-container" class="qr-container">
+            <div id="qr-code"></div>
+            <div class="instruction">
+                <strong>📖 Как использовать QR-код:</strong><br>
+                1. Откройте Streisand<br>
+                2. Нажмите "+" в правом верхнем углу<br>
+                3. Выберите "Scan QR Code"<br>
+                4. Отсканируйте код выше<br>
+                5. Нажмите "Connect"
+            </div>
         </div>
 
-        <button class="btn" onclick="copyUrl()" id="copyBtn" disabled>
-            📋 Скопировать ссылку
-        </button>
-
-        <button class="btn btn-danger" onclick="showUrl()" id="showUrlBtn" disabled>
-            👁 Показать ссылку
-        </button>
-
-        <div id="subscription-url" class="subscription-url"></div>
-
+        <!-- Шаг 3: Ручное копирование -->
         <div class="step">
-            <small>
-                <strong>Инструкция для ручного подключения:</strong><br>
-                1. Откройте приложение Streisand<br>
-                2. Нажмите "+" (плюс) в правом верхнем углу<br>
-                3. Выберите "Import from Clipboard"<br>
-                4. Нажмите "Connect" для подключения
-            </small>
+            <span class="step-number">3</span>
+            <strong>Ручное подключение</strong><br>
+            <small>Если QR-код не работает</small>
         </div>
 
-        <span class="toggle-debug" onclick="toggleDebug()">🔧 Показать отладочную информацию</span>
-        <div id="debug-info" class="debug-info"></div>
+        <button class="btn btn-secondary" onclick="showConfig()" id="configBtn" disabled>
+            📋 Показать конфигурацию
+        </button>
+
+        <div id="config-box" class="config-box"></div>
+
+        <button class="btn" onclick="copyConfig()" id="copyBtn" style="display: none;">
+            📝 Скопировать конфигурацию
+        </button>
+
+        <div class="instruction" style="display: none;" id="manual-instruction">
+            <strong>📖 Ручная настройка:</strong><br>
+            1. Скопируйте конфигурацию выше<br>
+            2. Откройте Streisand<br>
+            3. Нажмите "+" → "Import from Clipboard"<br>
+            4. Нажмите "Connect"
+        </div>
+
+        <!-- Предупреждение -->
+        <div class="warning">
+            ⚠️ <strong>Важно:</strong> Автоматическое подключение через ссылки в iOS не работает надежно. Используйте QR-код или ручное копирование.
+        </div>
+
+        <!-- Кнопка назад -->
+        <button class="btn btn-secondary" onclick="goBack()" style="margin-top: 20px;">
+            🔙 Вернуться в бот
+        </button>
     </div>
 
     <script>
         let subscriptionUrl = null;
-        let debugMode = false;
 
         // Получаем URL подписки из параметров
         function initializePage() {
             const urlParams = new URLSearchParams(window.location.search);
             subscriptionUrl = urlParams.get('url');
             
-            logDebug('URL Parameters:', window.location.search);
-            logDebug('Subscription URL:', subscriptionUrl);
+            console.log('URL Parameters:', window.location.search);
+            console.log('Subscription URL:', subscriptionUrl);
             
             if (subscriptionUrl) {
-                // Декодируем URL если он закодирован
                 try {
+                    // Декодируем URL если он закодирован
                     subscriptionUrl = decodeURIComponent(subscriptionUrl);
-                    logDebug('Decoded URL:', subscriptionUrl);
+                    console.log('Decoded URL:', subscriptionUrl);
+                    
+                    // Проверяем формат
+                    if (subscriptionUrl.startsWith('vless://')) {
+                        document.getElementById('status').innerHTML = '✅ Конфигурация VLESS загружена';
+                        document.getElementById('status').className = 'status success';
+                    } else {
+                        document.getElementById('status').innerHTML = '⚠️ Неизвестный формат конфигурации';
+                        document.getElementById('status').className = 'status warning';
+                    }
+                    
+                    // Активируем кнопки
+                    document.getElementById('qrBtn').disabled = false;
+                    document.getElementById('configBtn').disabled = false;
+                    
+                    // Показываем конфигурацию
+                    document.getElementById('config-box').textContent = subscriptionUrl;
+                    
                 } catch (e) {
-                    logDebug('URL decode error:', e.message);
+                    console.error('URL decode error:', e);
+                    showError('Ошибка декодирования конфигурации');
                 }
-                
-                document.getElementById('subscription-url').textContent = subscriptionUrl;
-                document.getElementById('status').innerHTML = '✅ Данные загружены, готов к подключению';
-                document.getElementById('status').className = 'status success';
-                
-                // Активируем кнопки
-                document.getElementById('autoConnectBtn').disabled = false;
-                document.getElementById('copyBtn').disabled = false;
-                document.getElementById('showUrlBtn').disabled = false;
-                
             } else {
-                document.getElementById('status').innerHTML = '❌ Ошибка: нет ссылки подписки в URL';
-                document.getElementById('status').className = 'status error';
-                logDebug('Error: No subscription URL in parameters');
+                showError('Конфигурация VPN не найдена в URL');
             }
         }
 
-        function logDebug(title, content = '') {
-            if (!debugMode) return;
-            const debugEl = document.getElementById('debug-info');
-            debugEl.innerHTML += `<strong>${title}</strong><br>${content}<br><br>`;
-            console.log(title, content);
-        }
-
-        function toggleDebug() {
-            debugMode = !debugMode;
-            const debugEl = document.getElementById('debug-info');
-            debugEl.style.display = debugMode ? 'block' : 'none';
-            
-            if (debugMode) {
-                logDebug('Debug mode enabled');
-                logDebug('User Agent:', navigator.userAgent);
-                logDebug('Current URL:', window.location.href);
-                logDebug('Subscription URL Length:', subscriptionUrl ? subscriptionUrl.length : 'null');
-            }
+        function showError(message) {
+            document.getElementById('status').innerHTML = `❌ ${message}`;
+            document.getElementById('status').className = 'status error';
         }
 
         function downloadApp() {
-            logDebug('Opening App Store...');
+            console.log('Opening App Store...');
             window.open('https://apps.apple.com/ru/app/streisand/id6450534064', '_blank');
         }
 
-        function autoConnect() {
+        function showQR() {
             if (!subscriptionUrl) {
-                alert('Ошибка: нет ссылки подписки');
+                alert('Ошибка: нет конфигурации для отображения');
                 return;
             }
 
-            try {
-                logDebug('Starting auto-connect...');
-                logDebug('Original subscription URL:', subscriptionUrl);
-                
-                // Проверяем, что это VLESS ссылка
-                if (!subscriptionUrl.startsWith('vless://')) {
-                    logDebug('Warning: URL does not start with vless://');
-                }
-                
-                // Разные варианты URL schemes для Streisand
-                const schemes = [
-                    // Прямая VLESS ссылка (должна работать)
-                    subscriptionUrl,
+            console.log('Generating QR code for:', subscriptionUrl);
+            
+            // Очищаем предыдущий QR-код
+            document.getElementById('qr-code').innerHTML = '';
+            
+            // Генерируем QR-код
+            QRCode.toCanvas(document.getElementById('qr-code'), subscriptionUrl, {
+                width: 280,
+                height: 280,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                margin: 2,
+                errorCorrectionLevel: 'M'
+            }, function (error) {
+                if (error) {
+                    console.error('QR code generation error:', error);
+                    alert('Ошибка генерации QR-кода. Используйте ручное копирование.');
+                } else {
+                    console.log('QR code generated successfully');
+                    document.getElementById('qr-container').classList.add('show');
                     
-                    // Streisand schemes с разными вариантами
-                    `streisand://import/${encodeURIComponent(subscriptionUrl)}`,
-                    `streisand://add?url=${encodeURIComponent(subscriptionUrl)}`,
-                    `streisand://config?url=${encodeURIComponent(subscriptionUrl)}`,
-                    `streisand://import?config=${encodeURIComponent(subscriptionUrl)}`,
-                    
-                    // Универсальные схемы для V2Ray клиентов
-                    `v2ray://import/${encodeURIComponent(subscriptionUrl)}`,
-                    `clash://install-config?url=${encodeURIComponent(subscriptionUrl)}`,
-                ];
-
-                let currentScheme = 0;
-                let attemptStartTime = Date.now();
-                
-                function tryNextScheme() {
-                    if (currentScheme < schemes.length) {
-                        const url = schemes[currentScheme];
-                        const schemeName = currentScheme === 0 ? 'Direct VLESS' : 
-                                          url.includes('streisand://') ? 'Streisand scheme' :
-                                          url.includes('v2ray://') ? 'V2Ray scheme' : 'Other';
-                        
-                        logDebug(`Attempt ${currentScheme + 1} (${schemeName}):`, url);
-                        
-                        document.getElementById('status').innerHTML = `🔄 Попытка ${currentScheme + 1}/${schemes.length}: ${schemeName}`;
-                        document.getElementById('status').className = 'status info';
-                        
-                        // Создаем невидимую ссылку и кликаем по ней
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.style.display = 'none';
-                        document.body.appendChild(link);
-                        
-                        try {
-                            link.click();
-                            logDebug('Link clicked successfully');
-                        } catch (clickError) {
-                            logDebug('Click error:', clickError.message);
-                            // Fallback: прямое присвоение location
-                            window.location.href = url;
-                        }
-                        
-                        document.body.removeChild(link);
-                        currentScheme++;
-                        
-                        // Через 4 секунды пробуем следующий способ
-                        setTimeout(() => {
-                            if (currentScheme < schemes.length) {
-                                tryNextScheme();
-                            } else {
-                                // Все способы исчерпаны
-                                const totalTime = Math.round((Date.now() - attemptStartTime) / 1000);
-                                logDebug(`All schemes exhausted after ${totalTime}s`);
-                                
-                                document.getElementById('status').innerHTML = 
-                                    '❌ Автоподключение не сработало.<br>' +
-                                    '<small>Используйте ручное подключение ниже</small>';
-                                document.getElementById('status').className = 'status error';
-                                showUrl();
-                            }
-                        }, 4000);
-                    }
+                    // Скроллим к QR-коду
+                    document.getElementById('qr-container').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
                 }
-                
-                tryNextScheme();
-
-            } catch (error) {
-                logDebug('AutoConnect error:', error.message);
-                document.getElementById('status').innerHTML = '❌ Ошибка автоподключения';
-                document.getElementById('status').className = 'status error';
-            }
+            });
         }
 
-        function copyUrl() {
+        function showConfig() {
             if (!subscriptionUrl) {
-                alert('Ошибка: нет ссылки подписки');
+                alert('Ошибка: нет конфигурации для отображения');
                 return;
             }
 
-            logDebug('Copying URL to clipboard...');
+            document.getElementById('config-box').classList.add('show');
+            document.getElementById('copyBtn').style.display = 'block';
+            document.getElementById('manual-instruction').style.display = 'block';
             
-            if (navigator.clipboard) {
+            // Скроллим к конфигурации
+            document.getElementById('config-box').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+
+        function copyConfig() {
+            if (!subscriptionUrl) {
+                alert('Ошибка: нет конфигурации для копирования');
+                return;
+            }
+
+            console.log('Copying config to clipboard...');
+            
+            if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(subscriptionUrl).then(() => {
-                    alert('✅ Ссылка скопирована в буфер обмена!\n\nТеперь:\n1. Откройте Streisand\n2. Нажмите "+"\n3. Выберите "Import from Clipboard"');
-                    showUrl();
+                    alert('✅ Конфигурация скопирована!\n\nТеперь:\n1. Откройте Streisand\n2. Нажмите "+"\n3. Выберите "Import from Clipboard"\n4. Нажмите "Connect"');
                 }).catch((error) => {
-                    logDebug('Clipboard error:', error.message);
-                    showUrl();
-                    alert('Скопируйте ссылку из поля ниже вручную');
+                    console.error('Clipboard error:', error);
+                    fallbackCopy();
                 });
             } else {
-                // Fallback для старых браузеров
-                showUrl();
-                alert('Скопируйте ссылку из поля ниже и вставьте в Streisand');
+                fallbackCopy();
             }
         }
 
-        function showUrl() {
-            document.getElementById('subscription-url').style.display = 'block';
-            logDebug('Showing subscription URL');
+        function fallbackCopy() {
+            // Fallback для старых браузеров или небезопасного контекста
+            const textArea = document.createElement('textarea');
+            textArea.value = subscriptionUrl;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('✅ Конфигурация скопирована!\n\nОткройте Streisand и импортируйте из буфера обмена.');
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                alert('❌ Не удалось скопировать. Выделите и скопируйте текст конфигурации вручную.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function goBack() {
+            // Возврат в Telegram или закрытие окна
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            } else {
+                window.history.back();
+            }
         }
 
         // Обработка возврата в приложение
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted) {
-                logDebug('Page restored from cache');
-                document.getElementById('status').innerHTML = '🔄 Вернулись в браузер. Проверьте Streisand или попробуйте ручное подключение.';
-                document.getElementById('status').className = 'status info';
-            }
-        });
-
-        // Обработка фокуса/размытия страницы
-        let pageVisible = true;
         document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                pageVisible = false;
-                logDebug('Page hidden - possibly switched to Streisand');
-            } else {
-                if (!pageVisible) {
-                    logDebug('Page visible again - returned from app');
-                    document.getElementById('status').innerHTML = '🔄 Если Streisand не открылся, попробуйте ручное подключение';
-                    document.getElementById('status').className = 'status info';
-                }
-                pageVisible = true;
+            if (!document.hidden) {
+                console.log('Page became visible - user returned from app');
             }
         });
 
