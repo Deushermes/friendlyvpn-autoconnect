@@ -190,18 +190,27 @@
                 try {
                     subscriptionUrl = decodeURIComponent(subscriptionUrl);
                     
-                    // Проверяем, что это subscription URL (не прямая VLESS ссылка)
-                    if (subscriptionUrl.includes('/sub/') || subscriptionUrl.includes('subscription')) {
+                    console.log('Decoded subscription URL:', subscriptionUrl);
+                    
+                    // Проверяем, что это subscription URL
+                    if (subscriptionUrl.includes('/sub/') || 
+                        subscriptionUrl.includes('subscription') ||
+                        subscriptionUrl.includes('myfriendlyvpn')) {
+                        
                         document.getElementById('status').innerHTML = '✅ Ссылка подписки загружена';
                         document.getElementById('status').className = 'status success';
                         document.getElementById('app-selection').style.display = 'block';
+                        
+                        // Показываем subscription URL в отладке
+                        console.log('Valid subscription URL detected:', subscriptionUrl);
+                        
                     } else if (subscriptionUrl.startsWith('vless://')) {
                         document.getElementById('status').innerHTML = '⚠️ Обнаружена VLESS ссылка - нужна ссылка подписки';
                         document.getElementById('status').className = 'status error';
                         document.getElementById('subscription-url').style.display = 'block';
                         document.getElementById('subscription-url').textContent = subscriptionUrl;
                     } else {
-                        document.getElementById('status').innerHTML = '✅ Конфигурация загружена';
+                        document.getElementById('status').innerHTML = '✅ Конфигурация загружена - пробуем подключиться';
                         document.getElementById('status').className = 'status success';
                         document.getElementById('app-selection').style.display = 'block';
                     }
