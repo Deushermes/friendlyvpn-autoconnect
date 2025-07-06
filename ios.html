@@ -173,7 +173,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             subscriptionUrl = urlParams.get('url');
             
+            console.log('Current URL:', window.location.href);
+            console.log('URL Parameters:', window.location.search);
             console.log('Subscription URL:', subscriptionUrl);
+            
+            // ОТЛАДКА: показываем информацию на странице
+            document.getElementById('status').innerHTML = `
+                🔍 <strong>Отладочная информация:</strong><br>
+                📄 URL: ${window.location.href}<br>
+                📋 Параметры: ${window.location.search || 'отсутствуют'}<br>
+                🔗 Subscription URL: ${subscriptionUrl || 'не найден'}
+            `;
+            document.getElementById('status').className = 'status info';
             
             if (subscriptionUrl) {
                 try {
@@ -200,7 +211,15 @@
                     showError('Ошибка декодирования ссылки');
                 }
             } else {
-                showError('Ссылка подписки не найдена в URL');
+                showError('Ссылка подписки не найдена в URL. Проверьте что бот правильно формирует ссылку.');
+                
+                // Показываем тестовую кнопку
+                document.getElementById('status').innerHTML += `
+                    <br><br>
+                    <button onclick="testWithDummyUrl()" style="background: #ff9800; color: white; border: none; padding: 10px; border-radius: 5px;">
+                        🧪 Тест с фиктивной ссылкой
+                    </button>
+                `;
             }
         }
 
@@ -280,4 +299,39 @@
                 navigator.clipboard.writeText(subscriptionUrl).then(() => {
                     alert('✅ Ссылка подписки скопирована!\n\nОткройте VPN приложение и импортируйте из буфера обмена.');
                 }).catch(() => {
-                    alert('Ссылка
+                    alert('Ссылка подписки показана выше. Скопируйте её вручную.');
+                });
+            } else {
+                alert('Ссылка подписки показана выше. Скопируйте её вручную.');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('status').innerHTML = `❌ ${message}`;
+            document.getElementById('status').className = 'status error';
+        }
+
+        function goBack() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            } else {
+                window.history.back();
+            }
+        }
+
+        // Обработка возврата в приложение
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && selectedApp) {
+                console.log('Page became visible - user returned from app');
+                document.getElementById('status').innerHTML = 
+                    `🔄 Если ${appInfo[selectedApp].name} не подключился, попробуйте:<br>` +
+                    '<small>1. Ручную настройку ниже<br>2. Другое приложение</small>';
+                document.getElementById('status').className = 'status info';
+            }
+        });
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
