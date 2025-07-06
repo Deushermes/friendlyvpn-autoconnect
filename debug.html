@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диагностика Subscription URL</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+        .result { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            white-space: pre-wrap; 
+            word-break: break-all; 
+        }
+        .error { 
+            background: #f8d7da; 
+            border-color: #f5c6cb; 
+            color: #721c24; 
+        }
+        .success { 
+            background: #d4edda; 
+            border-color: #c3e6cb; 
+            color: #155724; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Диагностика Subscription URL</h1>
+        
+        <div>
+            <label>Введите subscription URL:</label>
+            <input type="text" id="subscriptionUrl" placeholder="https://myfriendlyvpntest.duckdns.org/sub/..." 
+                   value="https://myfriendlyvpntest.duckdns.org/sub/dXNlcl8zNzEwOTEyMzNfMTc1MTc5NzQ5MywxNzUxODIwMzIzIapPvZX5A0">
+        </div>
+        
+        <button onclick="analyzeSubscription()">🔍 Анализировать</button>
+        <button onclick="testInStreisand()">📱 Тест в Streisand</button>
+        <button onclick="clearResults()">🗑 Очистить</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function analyzeSubscription() {
+            const url = document.getElementById('subscriptionUrl').value.trim();
+            const resultsDiv = document.getElementById('results');
+            
+            if (!url) {
+                addResult('❌ Введите URL', 'error');
+                return;
+            }
+            
+            addResult(`🔍 Анализируем: ${url}`, 'info');
+            
+            try {
+                // Делаем запрос к subscription URL
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'clash-verge/v1.3.1'  // Имитируем VPN клиент
+                    }
+                });
+                
+                addResult(`📊 HTTP Status: ${response.status} ${response.statusText}`, 
+                         response.ok ? 'success' : 'error');
+                
+                // Анализируем заголовки
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                
+                addResult(`📋 Headers:\n${JSON.stringify(headers, null, 2)}`, 'info');
+                
+                if (response.ok) {
+                    // Получаем содержимое
+                    const text = await response.text();
+                    
+                    addResult(`📄 Content Length: ${text.length} символов`, 'info');
+                    addResult(`📝 Raw Content:\n${text}`, 'info');
+                    
+                    // Анализируем содержимое
+                    analyzeContent(text);
+                } else {
+                    addResult(`❌ Ошибка HTTP: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Ошибка запроса: ${error.message}`, 'error');
+            }
+        }
+        
+        function analyzeContent(content) {
+            addResult('🔍 Анализ содержимого:', 'info');
+            
+            // Проверяем формат
+            if (content.startsWith('vless://')) {
+                addResult('✅ Формат: Прямая VLESS ссылка', 'success');
+                analyzeVlessUrl(content);
+            } else if (content.startsWith('vmess://')) {
+                addResult('✅ Формат: Прямая VMess ссылка', 'success');
+            } else if (content.startsWith('trojan://')) {
+                addResult('✅ Формат: Прямая Trojan ссылка', 'success');
+            } else if (isBase64(content)) {
+                addResult('✅ Формат: Base64 кодировка', 'success');
+                try {
+                    const decoded = atob(content.trim());
+                    addResult(`📝 Декодированное содержимое:\n${decoded}`, 'info');
+                    analyzeContent(decoded);
+                } catch (e) {
+                    addResult('❌ Ошибка декодирования Base64', 'error');
+                }
+            } else if (content.includes('proxies:') || content.includes('proxy-groups:')) {
+                addResult('✅ Формат: YAML конфигурация (Clash)', 'success');
+            } else if (content.startsWith('{')) {
+                addResult('✅ Формат: JSON конфигурация', 'success');
+            } else {
+                addResult('❓ Неизвестный формат содержимого', 'error');
+            }
+        }
+        
+        function analyzeVlessUrl(vlessUrl) {
+            try {
+                const url = new URL(vlessUrl);
+                const params = new URLSearchParams(url.search);
+                
+                addResult(`🔗 VLESS анализ:
+Протокол: ${url.protocol}
+UUID: ${url.username}
+Сервер: ${url.hostname}:${url.port}
+Безопасность: ${params.get('security') || 'none'}
+Тип: ${params.get('type') || 'tcp'}
+Flow: ${params.get('flow') || 'none'}
+SNI: ${params.get('sni') || 'none'}
+Fingerprint: ${params.get('fp') || 'none'}`, 'success');
+
+                // Проверяем совместимость с Streisand
+                const security = params.get('security');
+                const flow = params.get('flow');
+                
+                if (security === 'reality') {
+                    addResult('⚠️ ВНИМАНИЕ: Streisand может НЕ поддерживать Reality протокол!', 'error');
+                    addResult('💡 Решение: Попробуйте Shadowrocket или v2rayN', 'info');
+                }
+                
+                if (flow && flow.includes('xtls')) {
+                    addResult('⚠️ ВНИМАНИЕ: XTLS flow может быть несовместим с некоторыми клиентами', 'error');
+                }
+                
+            } catch (e) {
+                addResult(`❌ Ошибка парсинга VLESS URL: ${e.message}`, 'error');
+            }
+        }
+        
+        function isBase64(str) {
+            try {
+                return btoa(atob(str)) === str;
+            } catch (err) {
+                return false;
+            }
+        }
+        
+        function testInStreisand() {
+            const url = document.getElementById('subscriptionUrl').value.trim();
+            if (!url) {
+                addResult('❌ Введите URL для тестирования', 'error');
+                return;
+            }
+            
+            const streisandUrl = `streisand://import/${encodeURIComponent(url)}`;
+            addResult(`🚀 Открываем в Streisand: ${streisandUrl}`, 'info');
+            
+            try {
+                window.location.href = streisandUrl;
+            } catch (e) {
+                addResult(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+        
+        function addResult(text, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            resultsDiv.appendChild(div);
+            
+            // Скроллим вниз
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Автоматический анализ при загрузке
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const url = urlParams.get('url');
+            if (url) {
+                document.getElementById('subscriptionUrl').value = decodeURIComponent(url);
+                analyzeSubscription();
+            }
+        });
+    </script>
+</body>
+</html>
