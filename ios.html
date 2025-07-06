@@ -163,6 +163,39 @@
             }
 
             try {
+                // Декодируем URL дважды если нужно
+                let decodedUrl = subscriptionUrl;
+
+                // Если URL закодирован дважды - декодируем
+                if (decodedUrl.includes('%25')) {
+                    decodedUrl = decodeURIComponent(decodedUrl);
+                }
+
+                // Создаем ссылку для Streisand БЕЗ дополнительного кодирования
+                const streisandUrl = `streisand://import/${decodedUrl}`;
+
+                console.log('Original URL:', subscriptionUrl);
+                console.log('Decoded URL:', decodedUrl);
+                console.log('Streisand URL:', streisandUrl);
+
+                window.location.href = streisandUrl;
+
+                document.getElementById('status').innerHTML = '✅ Переход в Streisand...';
+                document.getElementById('status').className = 'status success';
+
+                setTimeout(() => {
+                    document.getElementById('status').innerHTML = '💡 Если Streisand не открылся, используйте ручной способ ниже';
+                    document.getElementById('status').className = 'status info';
+                    document.getElementById('subscription-url').style.display = 'block';
+                }, 3000);
+
+            } catch (error) {
+                console.error('AutoConnect error:', error);
+                document.getElementById('status').innerHTML = '❌ Автоподключение не удалось. Используйте ручной способ';
+                document.getElementById('status').className = 'status error';
+                document.getElementById('subscription-url').style.display = 'block';
+            }
+        }
                 // Пытаемся открыть в Streisand
                 const streisandUrl = `streisand://import/${encodeURIComponent(subscriptionUrl)}`;
                 window.location.href = streisandUrl;
