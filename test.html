@@ -1,1 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест iOS автоподключения</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-link {
+            display: block;
+            background: #007AFF;
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .test-link:hover {
+            background: #0056CC;
+        }
+        .vless-url {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+        .info {
+            background: #d1ecf1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест iOS автоподключения</h1>
+    
+    <div class="info">
+        <strong>Инструкция по тестированию:</strong><br>
+        1. Убедитесь что у вас установлен Streisand<br>
+        2. Нажмите на тестовую ссылку ниже<br>
+        3. Проверьте, открывается ли Streisand автоматически<br>
+        4. Импортируется ли конфигурация
+    </div>
 
+    <h2>Тестовая VLESS ссылка:</h2>
+    <div class="vless-url" id="vlessUrl">
+        vless://a95bdb61-fcb4-4533-928b-b37402fb1499@194.87.0.95:443?security=reality&type=tcp&headerType=none&flow=xtls-rprx-vision&path=&host=&sni=www.microsoft.com&fp=chrome&pbk=d_qgnvC_tQE0YQDehb3SXlJyqH8Ae7F_KxQL0xzhuwc&sid=6ba85179e30d4fc2#🚀%20Marz%20(user_371091233_1751797493)%20[VLESS%20-%20tcp]
+    </div>
+
+    <h2>Тестовые ссылки:</h2>
+    
+    <a href="#" class="test-link" onclick="testDirect()">
+        📱 Тест 1: Прямая VLESS ссылка
+    </a>
+    
+    <a href="#" class="test-link" onclick="testStreisandImport()">
+        📱 Тест 2: Streisand Import схема
+    </a>
+    
+    <a href="#" class="test-link" onclick="testStreisandAdd()">
+        📱 Тест 3: Streisand Add схема
+    </a>
+    
+    <a href="#" class="test-link" onclick="testAutoConnectPage()">
+        🚀 Тест 4: Полная страница автоподключения
+    </a>
+    
+    <h2>Результаты тестов:</h2>
+    <div id="results" style="background: #f8f9fa; padding: 15px; border-radius: 8px; min-height: 100px;"></div>
+
+    <script>
+        const vlessUrl = "vless://a95bdb61-fcb4-4533-928b-b37402fb1499@194.87.0.95:443?security=reality&type=tcp&headerType=none&flow=xtls-rprx-vision&path=&host=&sni=www.microsoft.com&fp=chrome&pbk=d_qgnvC_tQE0YQDehb3SXlJyqH8Ae7F_KxQL0xzhuwc&sid=6ba85179e30d4fc2#🚀%20Marz%20(user_371091233_1751797493)%20[VLESS%20-%20tcp]";
+        
+        function logResult(test, result) {
+            const resultsDiv = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.innerHTML += `<div><strong>[${timestamp}] ${test}:</strong> ${result}</div>`;
+        }
+
+        function testDirect() {
+            logResult("Прямая VLESS", "Попытка открыть прямую ссылку...");
+            
+            try {
+                window.location.href = vlessUrl;
+                setTimeout(() => {
+                    logResult("Прямая VLESS", "Ссылка выполнена");
+                }, 1000);
+            } catch (error) {
+                logResult("Прямая VLESS", `Ошибка: ${error.message}`);
+            }
+        }
+
+        function testStreisandImport() {
+            const url = `streisand://import/${encodeURIComponent(vlessUrl)}`;
+            logResult("Streisand Import", `Тестируем: ${url.substring(0, 50)}...`);
+            
+            try {
+                window.location.href = url;
+                setTimeout(() => {
+                    logResult("Streisand Import", "Схема выполнена");
+                }, 1000);
+            } catch (error) {
+                logResult("Streisand Import", `Ошибка: ${error.message}`);
+            }
+        }
+
+        function testStreisandAdd() {
+            const url = `streisand://add?url=${encodeURIComponent(vlessUrl)}`;
+            logResult("Streisand Add", `Тестируем: ${url.substring(0, 50)}...`);
+            
+            try {
+                window.location.href = url;
+                setTimeout(() => {
+                    logResult("Streisand Add", "Схема выполнена");
+                }, 1000);
+            } catch (error) {
+                logResult("Streisand Add", `Ошибка: ${error.message}`);
+            }
+        }
+
+        function testAutoConnectPage() {
+            const encodedUrl = encodeURIComponent(vlessUrl);
+            const pageUrl = `ios.html?url=${encodedUrl}`;
+            logResult("Автоподключение", `Переход на страницу: ${pageUrl}`);
+            
+            window.location.href = pageUrl;
+        }
+
+        // Детектирование возврата на страницу
+        let pageVisible = true;
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                pageVisible = false;
+            } else {
+                if (!pageVisible) {
+                    logResult("Система", "Вернулись на страницу тестирования");
+                }
+                pageVisible = true;
+            }
+        });
+
+        window.addEventListener('focus', function() {
+            logResult("Система", "Страница получила фокус");
+        });
+
+        window.addEventListener('blur', function() {
+            logResult("Система", "Страница потеряла фокус (возможно, открылось приложение)");
+        });
+
+        // Лог при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            logResult("Система", "Страница тестирования загружена");
+            logResult("User Agent", navigator.userAgent);
+        });
+    </script>
+</body>
+</html>
